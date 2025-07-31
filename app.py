@@ -11,15 +11,19 @@ if uploaded_files:
     df_list = [pd.read_csv(file) for file in uploaded_files]
     df = pd.concat(df_list, ignore_index=True)
 
-    st.subheader("Player Metrics (Raw Data)")
-    st.write(df.head())
+#    st.subheader("Player Metrics (Raw Data)")
+#    st.write(df.head())
 
+    numeric_cols = df.select_dtypes(include='number').columns.tolist()
+    
     # Group by player and average metrics
     # Replace 'PlayerName' with the actual column name for player identifier in your CSV
     player_id_col = "Pitcher"  # Change this if your column is named differently
     pitch_type_col = "TaggedPitchType"  # Change this if your column is named differently
-    numeric_cols = df.select_dtypes(include='number').columns.tolist()
-    avg_df = df.groupby([player_id_col, pitch_type_col])[numeric_cols].mean().reset_index()
+    # Group by player and avg metrics, keep PitcherThrows
+    agg_dict = {col: 'mean' for col in numeric_cols}
+    agg_dict["PitcherThrows"] = "first"
+    avg_df = df.groupby([player_id_col, pitch_type_col]).agg(agg_dict).reset_index()
 
     st.subheader("Average Player Metrics")
     st.write(avg_df)
@@ -37,6 +41,23 @@ if uploaded_files:
  #       (avg_df['VertBreak'] >= min_vbreak)
  #   ]
 
+    # Pitcher handedness filter
+    st.markdown("### Player Metric Filters")
+    handedness_col = "PitcherThrows"
+    handedness_map = {
+    "L": "Left", "R": "Right", "Left": "Left", "Right": "Right",
+    "l": "Left", "r": "Right"
+    }
+    if handedness_col in avg_df.columns:
+        # st.write("Unique values in PitcherThrows:", avg_df[handedness_col].unique())
+        avg_df["HandednessDisplay"] = avg_df[handedness_col].map(handedness_map)
+        handedness_options = ["Left", "Right"]
+        handedness = st.selectbox("Select Left/Right", options=["All"] + handedness_options)
+    else:
+        st.warning(f"Column '{handedness_col}' not found in data.")
+        avg_df["HandednessDisplay"] = "Unknown"
+        handedness = "All"
+    
     pitch_type = st.selectbox("Select Pitch Type", avg_df[pitch_type_col].unique())
 
     use_spin = st.checkbox("Filter by Spin Rate", value=True)
@@ -51,6 +72,8 @@ if uploaded_files:
 
     # Build filter mask dynamically
     mask = (avg_df[pitch_type_col] == pitch_type)
+    if handedness != "All":
+        mask &= (avg_df["HandednessDisplay"] == handedness)
     if use_spin:
         mask &= (avg_df['SpinRate'] >= min_spin)
     if use_hbreak:
@@ -60,7 +83,7 @@ if uploaded_files:
 
     filtered = avg_df[mask]
 
-    display_cols = [player_id_col, pitch_type_col, "RelSpeed", "SpinRate", "SpinAxis", "Extension", "VertBreak", "HorzBreak"]
+    display_cols = [player_id_col, pitch_type_col, "HandednessDisplay", "RelSpeed", "SpinRate", "SpinAxis", "Extension", "VertBreak", "HorzBreak"]
     filtered_display = filtered[display_cols]
 
     st.subheader("Filtered Players")
