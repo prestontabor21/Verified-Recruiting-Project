@@ -79,11 +79,11 @@ if uploaded_files:
     if use_hbreak:
         mask &= (avg_df['HorzBreak'] >= min_hbreak)
     if use_vbreak:
-        mask &= (avg_df['VertBreak'] >= min_vbreak)
+        mask &= (avg_df['InducedVertBreak'] >= min_vbreak)
 
     filtered = avg_df[mask]
 
-    display_cols = [player_id_col, pitch_type_col, "HandednessDisplay", "RelSpeed", "SpinRate", "SpinAxis", "Extension", "VertBreak", "HorzBreak"]
+    display_cols = [player_id_col, pitch_type_col, "HandednessDisplay", "RelSpeed", "SpinRate", "SpinAxis", "Extension", "InducedVertBreak", "HorzBreak"]
     filtered_display = filtered[display_cols]
 
     st.subheader("Filtered Players")
