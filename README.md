@@ -10,6 +10,6 @@
 
 
 <p align="center">
-  <img src="images/AppExample1.png" width="500" style="margin-right: 20px;">
-  <img src="images/AppExample2.png" width="500">
+  <img src="images/AppExample1.png" width="475" style="margin-right: 20px;">
+  <img src="images/AppExample2.png" width="475">
 </p>
